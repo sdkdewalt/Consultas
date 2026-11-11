@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta de Servicio Técnico - Casa Electrónica</title>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-input: #f1f5f9;
+            --border-color: #cbd5e1;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --accent-cyan: #0284c7;
+            --accent-blue: #0369a1;
+            --font-mono: 'Courier New', Courier, monospace;
+
+            --status-pendiente: #ef4444;   
+            --status-reparado: #3b82f6;    
+            --status-devolucion: #f97316;  
+            --status-entregado-ok: #10b981;
+            --status-entregado-malo: #a855f7; 
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            text-transform: uppercase !important;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        }
+
+        .brand-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .brand-logo {
+            width: 140px; /* Logo más grande */
+            height: auto;
+            margin-bottom: 0.75rem;
+        }
+
+        .brand-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: 1px;
+        }
+
+        .brand-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
+
+        input {
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.8rem 1rem;
+            color: var(--text-main);
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        input:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+            background-color: #fff;
+        }
+
+        .btn-consultar {
+            width: 100%;
+            padding: 0.9rem;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: none;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.25s ease;
+            margin-top: 1.5rem;
+        }
+
+        .btn-consultar:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+        }
+
+        /* SECCIÓN DE SOPORTE Y CONTACTO WHATSAPP */
+        .support-box {
+            margin-top: 1.75rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid #e2e8f0;
+            text-align: center;
+        }
+
+        .support-text {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+            margin-bottom: 0.85rem;
+            font-weight: 600;
+        }
+
+        .btn-whatsapp-soporte {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background-color: #25d366;
+            color: #fff;
+            padding: 0.65rem 1.25rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 10px rgba(37, 211, 102, 0.2);
+        }
+
+        .btn-whatsapp-soporte:hover {
+            background-color: #22bf5b;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 15px rgba(37, 211, 102, 0.35);
+        }
+
+        /* MODAL DE RESULTADOS */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            backdrop-filter: blur(6px);
+            padding: 1rem;
+        }
+
+        .modal-card {
+            background: #ffffff;
+            border: 3px solid var(--status-pendiente);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 1.75rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            position: relative;
+            animation: modalPop 0.3s ease-out;
+        }
+
+        @keyframes modalPop {
+            0% { transform: scale(0.95); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .modal-title-area span {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-weight: 700;
+            display: block;
+        }
+
+        .modal-title-area h2 {
+            font-family: var(--font-mono);
+            font-size: 1.2rem;
+            color: var(--accent-blue);
+            font-weight: 900;
+        }
+
+        .badge-estado {
+            padding: 0.35rem 0.85rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .grid-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .info-item span {
+            display: block;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .info-item p {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-top: 0.2rem;
+        }
+
+        .box-section {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0.85rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .box-section span {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-weight: 700;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .box-section p {
+            font-size: 0.85rem;
+            color: var(--text-main);
+            line-height: 1.4;
+            font-weight: 600;
+        }
+
+        .total-box {
+            margin-top: 1.25rem;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .total-box span {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #166534;
+        }
+
+        .total-box strong {
+            font-size: 1.2rem;
+            color: #15803d;
+            font-family: var(--font-mono);
+        }
+
+        .btn-cerrar-modal {
+            width: 100%;
+            margin-top: 1.5rem;
+            background: #0f172a;
+            color: #fff;
+            border: none;
+            padding: 0.8rem;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .btn-cerrar-modal:hover { opacity: 0.9; }
+
+        .error-msg {
+            margin-top: 1.25rem;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+            padding: 0.85rem;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            display: none;
+        }
+
+        .spin { animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="card">
+            <div class="brand-header">
+                <img src="https://lh3.googleusercontent.com/d/1x2-ypgTRlKYcmWTODNmge7TnIxp14xzK=s500" class="brand-logo" alt="Logo">
+                <h1 class="brand-title">CASA ELECTRÓNICA</h1>
+                <p class="brand-subtitle">CONSULTA EL ESTADO DE TU SERVICIO TÉCNICO</p>
+            </div>
+
+            <form id="formConsulta" onsubmit="consultarOrden(event)">
+                <div class="form-group">
+                    <label for="inputOrden">ORDEN DE SERVICIO</label>
+                    <input type="text" id="inputOrden" placeholder="EJ: 2026-0001" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="inputClave">CLAVE WEB</label>
+                    <input type="text" id="inputClave" placeholder="EJ: A3F92" style="font-family: var(--font-mono); font-weight: bold; letter-spacing: 1px;" required>
+                </div>
+
+                <button type="submit" class="btn-consultar" id="btnSubmit">
+                    <i data-lucide="search"></i> CONSULTAR ESTADO
+                </button>
+            </form>
+
+            <!-- BLOQUE DE SOPORTE Y CONTACTO WHATSAPP -->
+            <div class="support-box">
+                <p class="support-text">¿NO ENCUENTRAS TU NÚMERO DE ORDEN O CLAVE WEB? REVISA EL MENSAJE DE WHATSAPP QUE TE ENVIAMOS AL RECIBIR TU EQUIPO O CONTÁCTANOS.</p>
+                <a href="https://wa.me/573194500736?text=HOLA,%20NECESITO%20AYUDA%20CON%20EL%20NÚMERO%20DE%20ORDEN%20Y%20CLAVE%20WEB%20DE%20MI%20EQUIPO." target="_blank" class="btn-whatsapp-soporte">
+                    <i data-lucide="message-circle" style="width: 16px; height: 16px;"></i> CONTACTAR SERVICIO TÉCNICO
+                </a>
+            </div>
+
+            <div id="errorMsg" class="error-msg">
+                NO SE ENCONTRÓ NINGUNA ORDEN CON ESOS DATOS O LA CLAVE ES INCORRECTA.
+            </div>
+        </div>
+    </div>
+
+    <!-- VENTANA EMERGENTE (MODAL DE RESULTADOS) -->
+    <div id="modalOverlay" class="modal-overlay">
+        <div class="modal-card" id="modalCardBox">
+            <div class="modal-header">
+                <div class="modal-title-area">
+                    <span>ORDEN DE SERVICIO</span>
+                    <h2 id="resOrden">-</h2>
+                </div>
+                <div id="resBadgeEstado" class="badge-estado">PENDIENTE</div>
+            </div>
+
+            <div class="grid-info">
+                <div class="info-item">
+                    <span>CLIENTE</span>
+                    <p id="resNombre">-</p>
+                </div>
+                <div class="info-item">
+                    <span>TELÉFONO</span>
+                    <p id="resTelefono">-</p>
+                </div>
+            </div>
+
+            <div class="grid-info">
+                <div class="info-item">
+                    <span>ARTÍCULO / MARCA</span>
+                    <p id="resArticulo">-</p>
+                </div>
+                <div class="info-item">
+                    <span>MODELO / N° SERIE</span>
+                    <p id="resModelo">-</p>
+                </div>
+            </div>
+
+            <!-- Síntomas -->
+            <div class="box-section">
+                <span style="color: #ef4444;"><i data-lucide="alert-triangle" style="width: 14px; height: 14px; vertical-align: middle;"></i> SÍNTOMAS / FALLA REPORTADA</span>
+                <p id="resSintomas" style="margin-top: 0.25rem;">-</p>
+            </div>
+
+            <!-- Notas de Recepción -->
+            <div class="box-section">
+                <span>NOTAS DE RECEPCIÓN (ACCESORIOS / ESTADO)</span>
+                <p id="resNotas" style="margin-top: 0.25rem;">NINGUNA</p>
+            </div>
+
+            <!-- Diagnóstico y Reparación -->
+            <div class="box-section">
+                <span style="color: var(--accent-blue);"><i data-lucide="cpu" style="width: 14px; height: 14px; vertical-align: middle;"></i> DIAGNÓSTICO Y REPARACIÓN</span>
+                <p id="resDiagnostico" style="margin-top: 0.25rem; color: var(--text-muted);">EN PROCESO DE REVISIÓN TÉCNICA...</p>
+            </div>
+
+            <div class="grid-info" style="margin-top: 0.5rem;">
+                <div class="info-item">
+                    <span>TÉCNICO ASIGNADO</span>
+                    <p id="resTecnico">ASIGNADO EN TALLER</p>
+                </div>
+                <div class="info-item">
+                    <span>GARANTÍA</span>
+                    <p id="resGarantia">PENDIENTE / NO APLICA</p>
+                </div>
+            </div>
+
+            <div class="total-box">
+                <span>TOTAL A PAGAR <br><small style="font-size: 0.65rem; font-weight: normal; color: #166534;">VALOR DEL SERVICIO</small></span>
+                <strong id="resTotal">$ 0</strong>
+            </div>
+
+            <button type="button" class="btn-cerrar-modal" onclick="cerrarModal()">ENTENDIDO / CERRAR VENTANA</button>
+        </div>
+    </div>
+
+    <script>
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyvImjy9wU74oeq4YLCq1r7ksU0_U9UtZ_oHQ-p6cUj0JMNWHOXhNQ8ohBIQ9LcQjPQ/exec';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            
+            document.querySelectorAll('input').forEach(input => {
+                input.addEventListener('input', (e) => {
+                    const start = e.target.selectionStart;
+                    const end = e.target.selectionEnd;
+                    e.target.value = e.target.value.toUpperCase();
+                    e.target.setSelectionRange(start, end);
+                });
+            });
+        });
+
+        async function consultarOrden(e) {
+            e.preventDefault();
+            const orden = document.getElementById('inputOrden').value.trim();
+            const clave = document.getElementById('inputClave').value.trim();
+            const btn = document.getElementById('btnSubmit');
+            const errorDiv = document.getElementById('errorMsg');
+
+            errorDiv.style.display = 'none';
+            btn.disabled = true;
+            btn.innerHTML = `<i data-lucide="loader" class="spin"></i> BUSCANDO...`;
+            lucide.createIcons();
+
+            try {
+                const response = await fetch(`${APPS_SCRIPT_URL}?orden=${encodeURIComponent(orden)}&clave=${encodeURIComponent(clave)}`);
+                const data = await response.json();
+
+                if (data && data.encontrado) {
+                    document.getElementById('resOrden').textContent = data.orden || orden;
+                    document.getElementById('resNombre').textContent = data.nombre || 'N/A';
+                    document.getElementById('resTelefono').textContent = data.telefono || 'N/A';
+                    document.getElementById('resArticulo').textContent = `${data.articulo || ''} ${data.marca || ''}`.trim() || 'N/A';
+                    document.getElementById('resModelo').textContent = `${data.modelo || 'N/A'} / SN: ${data.serie || 'DESCONOCIDO'}`;
+                    
+                    document.getElementById('resSintomas').textContent = data.sintomas || 'N/A';
+                    document.getElementById('resNotas').textContent = data.notas || 'NINGUNA';
+
+                    const diagText = data.diagnostico && data.diagnostico.trim() !== "" ? data.diagnostico : "EN PROCESO DE REVISIÓN TÉCNICA...";
+                    document.getElementById('resDiagnostico').textContent = diagText;
+
+                    document.getElementById('resTecnico').textContent = data.tecnico && data.tecnico.trim() !== "" ? data.tecnico : "ASIGNADO EN TALLER";
+                    document.getElementById('resGarantia').textContent = data.garantia && data.garantia.trim() !== "" ? data.garantia : "PENDIENTE / NO APLICA";
+                    
+                    let rawTotal = data.totalPagar ? data.totalPagar.toString().replace(/\D/g, '') : '0';
+                    let formattedTotal = rawTotal ? parseInt(rawTotal, 10).toLocaleString('es-CO') : '0';
+                    document.getElementById('resTotal').textContent = `$ ${formattedTotal}`;
+
+                    const estado = (data.estado || 'PENDIENTE').toString().toUpperCase();
+                    const badge = document.getElementById('resBadgeEstado');
+                    const modalCard = document.getElementById('modalCardBox');
+                    badge.textContent = estado;
+
+                    let colorBorde = '#ef4444';
+                    if (estado.includes('REPARADO')) { colorBorde = '#3b82f6'; }
+                    else if (estado.includes('DEVOLUCION')) { colorBorde = '#f97316'; }
+                    else if (estado.includes('ENTREGADO OK')) { colorBorde = '#10b981'; }
+                    else if (estado.includes('ENTREGADO MALO')) { colorBorde = '#a855f7'; }
+
+                    modalCard.style.borderColor = colorBorde;
+                    badge.style.backgroundColor = colorBorde;
+
+                    document.getElementById('modalOverlay').style.display = 'flex';
+                } else {
+                    errorDiv.style.display = 'block';
+                }
+            } catch (err) {
+                errorDiv.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i data-lucide="search"></i> CONSULTAR ESTADO`;
+                lucide.createIcons();
+            }
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalOverlay').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
